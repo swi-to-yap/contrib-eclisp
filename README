@@ -1,0 +1,88 @@
+Embeddable Common Lisp for SWI-Prolog.
+
+Having Prolog emulated in Lisp is too slow.   Writting Common Lisp in Prolog is easy but takes a while..
+So instead we used ECL FFI and Prolog's FFI to create a way that neither system had to be compromised in speed or compatabilty.
+
+I wrote this 10 years ago and it worked great back then as 2-WAY Interface between your Prolog and Lisp code.
+But it has gotten some bitrot and might take a couple days/weeks to fix.
+
+There were things that I solvable only with program transformation.  This I found would have been too much to support over
+a long term period. These are solved when you use the [O_FLUENT](https://github.com/logicmoo/fluents/) patch into SWI-Prolog.  
+Which allows a unification to happen in one chosen direction.  And no chosen direction!
+simular to using   \+ \+ (A=B).  And letting A destructively assign attributes (to itself or manipulate the value of B)
+
+The patch allows lisp recordtypes or any datablob to appear as an attributed variable.  
+Unify will no longer destroy lisp datatypes even after unifying to standard prolog objects!
+Lisp symbols like before are associated with a `gvar` but now you may use them a 
+logical variables as well with contraints on their values.
+
+````
+?- eval([defstruct,foo,bar,baz,quux]),fluent_sink(X),eval(['make-foo'],X),fluent_source(X).
+Lisp-> 'FOO
+X = {#s(FOO :BAR NIL :BAAZ NIL :QUUX NIL)}
+
+````
+How this works
+* We defstructed a recordp
+* Created a Fluent Sink to allow the variable to receive a values but is allows unbound
+* Evalued some lisp code `(make-foo)` into the Sink
+* Fluent source allow the variable to produce a value (copies its value into other variables)
+* The Fluent is unifiable with anything you program it to be  "my foo" `my_bar` 666 etc
+* aFterwards it is still the recordp value
+
+
+Below is jsut the copy of the ECL installation instruction.
+
+ECL, like many other free programs, can be built and installed a GNU tool called Autoconf. This is a set of automatically generated scripts that detect the features of your machine, such as the compiler type, existing libraries, desired installation path, and configures ECL accordingly. The following procedure describes how to build ECL using this procedure and it applies to all platforms except for the Windows ports.
+
+````
+
+ the tar file
+$ gunzip -c ecl-16.0.0.tgz | tar xf -
+Choose a directory in which you will install ECL. Following the Unix covention we will use /usr/local
+Run the configuration file
+$ cd ecl-16.0.0
+     $ ./configure --prefix=/usr/local
+If you are building under Solaris 9 you should replace the last line with
+$ ./configure --enable-slow-config --with-system-gmp=no \
+     --prefix=/usr/local
+By now you should have a directory with the name build and a bunch of makefiles inside it.
+Use GNU make to begin building ECL. Normally this amounts to invoking
+$ make
+from the command line.
+Install the program using
+$ make install
+Make sure the program is installed and ready to run
+$ /usr/local/ecl
+     ECL (Embeddable Common-Lisp) 16.0.0
+     Copyright (C) 1984 Taiichi Yuasa and Masami Hagiya
+     Copyright (C) 1993 Giuseppe Attardi
+     Copyright (C) 2000 Juan J. Garcia-Ripoll
+     Copyright (C) 2015 Daniel Kochmanski
+     ECL is free software, and you are welcome to redistribute it
+     under certain conditions; see file 'Copyright' for details.
+     Type :h for Help.
+     Top level in: #<process TOP-LEVEL>.
+     > 
+6.3. Platform specific instructions
+
+6.3.1. Microsoft compilers
+
+If you have a commercial version of Microsoft Visual Studio, the steps are simple:
+
+Change to the msvc directory.
+Run nmake to build ECL.
+Run nmake install prefix=d:\Software\ECL where the prefix is the directory where you want to install ECL.
+Optionally, if you want to build a self-installing executable, you can install NSIS and run nmake windows-nsi.
+If you want to build ECL using the free Microsoft Visual Studio Express 2010 or better, you should follow these before building ECL as sketched before:
+
+Download and install Microsoft Visual Studio C++ Compiler.
+Download and install the Windows SDK
+Open the Windows SDK terminal, which will set up the appropriate paths and environment variables.
+6.3.2. OpenBSD and NetBSD
+
+Before following the instructions in Section 6.2 you should install the following packages: boehm-gc and gmp-4.1 or better. Another component, libffi will be needed if you want to use the dynamic foreign interface.
+
+Prev 	Up	 Next
+5. Copyright of this manual 
+````

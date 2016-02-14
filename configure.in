@@ -1,0 +1,33 @@
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(install-sh)
+AC_PREREQ([2.50])
+AC_CONFIG_HEADER(config.h)
+
+AC_SUBST(ECLISP_TARGETS)
+AC_SUBST(ECLISP_PLTARGETS)
+
+m4_include([../ac_swi_c.m4])
+
+AC_CHECK_HEADERS(eclisp.h zutil.h)
+AC_CHECK_LIB(z, eclispVersion,
+	     LIBS="$LIBS -lz"
+	     ECLISP=yes,
+	     ECLISP=no)
+
+if test "$ECLISP" = yes; then
+  ECLISP_TARGETS="eclisp.$SO"
+  ECLISP_PLTARGETS=eclisp.pl
+else
+  ECLISP_TARGETS=nolib
+  cat << EOF
+##################################################################
+# ERROR: Could not find library eclisp (-lz).  Dropped library(eclisp)
+# Library eclisp is available from http://www.eclisp.net/
+# Most Unix/Linux distributions are shipped with binaries.  Make
+# sure to have the development library installed.
+##################################################################
+EOF
+fi
+
+AC_OUTPUT(Makefile)
